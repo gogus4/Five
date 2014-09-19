@@ -1,3 +1,5 @@
+<?php include 'connexion_sql.php'; ?>
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -51,7 +53,6 @@
                 <span class="element-divider place-right"></span>
 
                 <div class="element place-right">
-                    <span class="icon-user"></span>
                     <a class="dropdown-toggle" href="#"><small><strong>Diego Da Costa Oliveira</strong></small></a>
 
                     <ul class="dropdown-menu bg-cyan" data-role="dropdown">
@@ -63,14 +64,88 @@
         </nav>
 
         <div>
-<div style="background: #31190C top left no-repeat; background-size: cover; height: 300px;">
-<div class="container" style="padding: 50px 20px">
-<h1 class="fg-white">Metro UI CSS 2.0</h1>
-            <image src="images/lefive.png" style="margin-top:50px;height:200px;width=200px;">
+            <div style="background: #31190C;height: 330px;">
+                <div class="container" style="padding: 50px 20px">
+                <h2 class="fg-white">Prochain Five 
 
-</div>
-</div>
+                    <?php
+                    $requete = $bdd->prepare('SELECT * FROM game ORDER BY date DESC LIMIT 1');
+                    $requete->execute();
+                    $donnees = $requete->fetch();
+                    echo $donnees['date_fr'];
+                    $id_game = $donnees['id_game'];
 
+                    // EDIT
+                    $id = 1;
+                    
+                    $requete = $bdd->prepare('SELECT COUNT(*) FROM play_at where id_game = :id_game');
+                    $requete->execute(array("id_game" => $id_game));
+                    $nb_players = (int)$requete->fetchColumn();
+                   
+                    if($nb_players > 0)
+                    {
+                        echo '<br/><a id="show_players" href="#">'. $nb_players .'</a>'; 
+
+                        if($nb_players == 1)
+                        {
+                            echo ' personne a répondu.';
+                        }
+
+                        else
+                        {
+                            echo ' personnes ont répondu.';
+                        }
+                    }
+
+                    else
+                    {
+                        echo '<br/><a id="show_players" href="#">Aucune personne reçu.</a>'; 
+                    }
+
+                    echo '</h2>';
+
+                    ?>
+
+                    <image src="images/lefive.png" style="height:200px;width=200px;">
+                </div>
+            </div>
         </div>
     </body>
+
+        <!-- JQUERY -->
+        <script>
+            $("#show_players").on('click', function()
+            {
+                $.Dialog({
+                    overlay: true,
+                    shadow: true,
+                    flat: true,
+                    icon: '<span class="icon-user-2"></span>',
+                    title: 'Joueurs inscrit',
+                    content: '',
+                    width:400,
+                    onShow: function(_dialog)
+                    {
+                        $.ajax({
+                        url : "getPlayers.php?id_game=<?php echo $id_game ?>",
+                        type : "GET",
+                        success : function(html)
+                        {
+                            var content = _dialog.children('.content');
+                            var result_html = '<div class="listview-outlook">';
+                            $(html).find('ROW').each(   
+                             function()
+                             {
+                                var name = $(this).find('NAME').text();
+                                var firstname = $(this).find('FIRSTNAME').text();
+
+                                result_html += '<a href="#" class="list"><div class="list-content">'+ firstname + ' ' + name + '</div></a>';
+                              });
+                              content.html(result_html);               
+                        }
+                        });           
+                    }
+                });
+            });
+        </script>
 </html>
